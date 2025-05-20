@@ -1,0 +1,308 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mapa-nahon</title>
+    <link rel="icon" href="images/logo1.png" type="image/x-icon">
+
+    <!-- Leaflet CSS for map styling -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha3/dist/css/bootstrap.min.css" rel="stylesheet">
+
+    <link rel="stylesheet" href="css/stylez.css">
+    <link rel="stylesheet" href="css/dashboard.css">
+</head>
+<body>
+     <!-- Header Navigation -->
+     <header class="bg-primary text-white p-3 position-fixed top-0 start-0 w-100 d-flex justify-content-between align-items-center">
+        <div class="d-flex align-items-center">
+            <img src="images/logo1.png" alt="logo" id="logo">
+            <h1 class="h5 m-0">Mapa-Panahon</h1>
+        </div>
+
+        <button id="dashboardBtn" class="btn btn-info btn-sm me-2" title="Weather Dashboard"><i class="fas fa-th-large"></i> Dashboard</button>
+
+        <button class="btn btn-light btn-sm" type="button" data-bs-toggle="collapse" data-bs-target="#sideNav" aria-expanded="false" aria-controls="sideNav">
+            <span class="hamburger">
+                <span class="bar"></span>
+                <span class="bar"></span>
+                <span class="bar"></span>
+            </span>
+        </button>
+    </header>
+
+    <!-- Side Navigation -->
+    <div class="side-nav" id="sideNav">
+        <a href="home.html"><i class="fas fa-home" id="homez"></i> Home</a>
+        <a href="#search"><i class="fas fa-search-location"></i> Search Location</a>
+        <a href="#weather"><i class="fas fa-cloud-sun"></i> Weather Info Toggle</a>
+        <a href="#" onclick="toggleNews()"><i class="fas fa-newspaper"></i> Show News</a>
+        <a href="#" onclick="toggleCharts()"><i class="fas fa-chart-line"></i> Weather Charts</a>
+    </div>
+    
+    <!-- Search container -->
+    <div class="search-container ">
+        <div class="search-bar" id="searchBar">
+            <input type="text" id="searchInput" placeholder="Search location..." onkeypress="if(event.key === 'Enter') { document.getElementById('searchButton').click(); return false; }" />
+            <button id="searchButton">Go</button>
+            <button id="findMeButton" title="Use my current location"><i class="fas fa-location-arrow"></i></button>
+        </div>
+    </div>
+
+    <!-- GIF Loader Container --> 
+    <div id="loadingScreen" class="hidden"> 
+        <img id="loadingGif" src="animation/loading.gif" alt="Loading...">
+        <p>flying there...</p>
+    </div> 
+
+    <div id="map">
+
+    </div>
+    
+
+    <!-- Weather Layer Controls -->
+    <div class="layer-controls">
+        <h3>Weather Layers</h3>
+        <div class="layer-options">
+            <label><input type="checkbox" id="cloudsLayer"> Clouds</label>
+            <label><input type="checkbox" id="precipLayer"> Precipitation</label>
+            <label><input type="checkbox" id="tempLayer"> Temperature</label>
+            <label><input type="checkbox" id="windLayer"> Wind</label>
+        </div>
+    </div>
+    
+    <div id="weatherInfoSection" class="hidden">
+        <div class="weather-container">
+            <div id="weatherInfo"></div>
+            <div class="weather-controls">
+                <button id="unitToggle" onclick="toggleUnits()">°C/°F</button>
+                <button id="layerToggle" onclick="toggleWeatherLayers()"><i class="fas fa-layer-group"></i> Layers</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="forecastSection" class="section hidden">
+        
+        <div id="forecastCards" class="forecast-cards">
+            <!-- Cards will be dynamically inserted here -->
+        </div>
+    </div>
+
+    <div id="aiBox" class="hidden">
+       
+    </div>
+    
+    <!-- Add this new container for news -->
+    <div id="locationNewsBox" class="hidden">
+        <h3><i class="fas fa-newspaper"></i> Location News</h3>
+        <div id="newsContent"></div>
+    </div>
+    
+    <div id="weatherChartSection" class="hidden">
+        <h3><i class="fas fa-chart-line"></i> Weather Analytics</h3>
+        
+        <div class="chart-nav">
+            <button class="active" onclick="showChartPage(1)">Temperature & Humidity</button>
+            <button onclick="showChartPage(2)">Wind & Pressure</button>
+        </div>
+        
+        <div class="chart-section" id="chartPage1">
+            <div class="chart-container">
+                <div class="chart-title">Temperature Forecast</div>
+                <canvas id="temperatureChart"></canvas>
+            </div>
+            <div class="chart-container">
+                <div class="chart-title">Humidity Forecast</div>
+                <canvas id="humidityChart"></canvas>
+            </div>
+            <div class="chart-container">
+                <div class="chart-title">Weather Distribution</div>
+                <canvas id="weatherDistributionChart"></canvas>
+            </div>
+            <div class="chart-container">
+                <div class="chart-title">Precipitation Forecast</div>
+                <canvas id="precipitationChart"></canvas>
+            </div>
+        </div>
+        
+        <div class="chart-section hidden" id="chartPage2">
+            <div class="chart-container">
+                <div class="chart-title">Wind Speed Forecast</div>
+                <canvas id="windChart"></canvas>
+            </div>
+            <div class="chart-container">
+                <div class="chart-title">Pressure Forecast</div>
+                <canvas id="pressureChart"></canvas>
+            </div>
+            <div class="chart-container">
+                <div class="chart-title">Temperature Range</div>
+                <canvas id="temperatureRangeChart"></canvas>
+            </div>
+            <div class="chart-container">
+                <div class="chart-title">UV Index Forecast</div>
+                <canvas id="uvIndexChart"></canvas>
+            </div>
+        </div>
+    </div>
+    
+
+
+    
+    <!-- Weather Dashboard -->
+    <div id="weatherDashboard">
+      <div class="dashboard-container">
+        <!-- Sidebar/Profile Card -->
+        <aside class="dashboard-sidebar">
+          <div class="profile-card">
+            <div class="profile-location">
+              <i class="fas fa-map-marker-alt"></i>
+              <span id="dashboardLocation">Search for a location</span>
+            </div>
+            <!-- Inside the profile-card div, after profile-weather and before profile-details -->
+            <div class="profile-weather">
+              <img id="dashboardWeatherIcon" src="animation/default.gif" alt="Weather condition">
+              <div class="profile-temp" id="dashboardTemp">--°C</div>
+              <div class="profile-desc" id="dashboardCondition">--</div>
+              <div class="profile-feels">Feels like: <span id="dashboardFeelsLike">--°C</span></div>
+              
+              <!-- Temperature Chart Widget -->
+              <div class="temperature-chart">
+                <h4>Temperature</h4>
+                <div class="temp-dots">
+                  <div class="temp-dot"></div>
+                  <div class="temp-dot"></div>
+                  <div class="temp-dot"></div>
+                  <div class="temp-dot"></div>
+                </div>
+                <div class="temp-timeline">
+                  <div class="temp-point">
+                    <div class="time">Morning</div>
+                    <div class="temp-value" id="morningTemp">14°</div>
+                  </div>
+                  <div class="temp-point">
+                    <div class="time">Afternoon</div>
+                    <div class="temp-value" id="afternoonTemp">16°</div>
+                  </div>
+                  <div class="temp-point">
+                    <div class="time">Evening</div>
+                    <div class="temp-value" id="eveningTemp">14°</div>
+                  </div>
+                  <div class="temp-point">
+                    <div class="time">Night</div>
+                    <div class="temp-value" id="nightTemp">12°</div>
+                  </div>
+                </div>
+              </div>
+              
+              <!-- Global Map Widget -->
+              <div class="global-map-widget">
+                <h4>Explore global map</h4>
+                <p>Explore global map of wind, weather and ocean conditions.</p>
+                <button class="btn" id="getStartedBtn">Get Started</button>
+              </div>
+            </div>
+            <div class="profile-details">
+              <div><i class="fas fa-tint"></i> <span id="dashboardHumidity">--%</span></div>
+              <div><i class="fas fa-wind"></i> <span id="dashboardWind">-- m/s</span></div>
+              <div><i class="fas fa-tachometer-alt"></i> <span id="dashboardPressure">-- hPa</span></div>
+              <div><i class="fas fa-eye"></i> <span id="dashboardVisibility">-- m</span></div>
+            </div>
+          </div>
+        </aside>
+
+        <!-- Main Dashboard Grid -->
+        <main class="dashboard-main">
+          <div class="dashboard-header">
+            <h2><i class="fas fa-th-large"></i> Weather Dashboard</h2>
+            <div class="dashboard-controls">
+              <button class="theme-toggle" id="themeToggle"><i class="fas fa-moon"></i></button>
+              <button class="close-btn" id="closeDashboard"><i class="fas fa-times"></i></button>
+            </div>
+          </div>
+          <div class="dashboard-grid">
+            <!-- Hourly Forecast Widget -->
+            <div class="widget">
+              <div class="widget-header">
+                <h3>Hourly Forecast</h3>
+                <i class="fas fa-clock"></i>
+              </div>
+              <div class="widget-content">
+                <div class="hourly-forecast-grid" id="hourlyForecastWidget"></div>
+              </div>
+            </div>
+            <!-- 5-Day Forecast Widget -->
+            <div class="widget">
+              <div class="widget-header">
+                <h3>5-Day Forecast</h3>
+                <i class="fas fa-calendar-alt"></i>
+              </div>
+              <div class="widget-content">
+                <div class="daily-forecast" id="dailyForecastWidget"></div>
+              </div>
+            </div>
+            <!-- AI Insights Widget -->
+            <div class="widget">
+              <div class="widget-header">
+                <h3>AI Weather Insights</h3>
+                <i class="fas fa-robot"></i>
+              </div>
+              <div class="widget-content" id="aiInsightsWidget"></div>
+            </div>
+            <!-- Weather Map Widget -->
+            <div class="widget">
+              <div class="widget-header">
+                <h3>Weather Map</h3>
+                <i class="fas fa-map"></i>
+              </div>
+              <div class="widget-content">
+                <div id="miniMap" style="height: 180px; border-radius: 15px;"></div>
+              </div>
+            </div>
+            <!-- Weather Stats Widget -->
+            <div class="widget">
+              <div class="widget-header">
+                <h3>Weather Statistics</h3>
+                <i class="fas fa-chart-bar"></i>
+              </div>
+              <div class="widget-content">
+                <canvas id="dashboardTempChart" height="120"></canvas>
+              </div>
+            </div>
+
+            <!-- Weather Alerts Widget -->
+          <div class="widget">
+            <div class="widget-header">
+              <h3>Weather Alerts</h3>
+              <i class="fas fa-exclamation-triangle"></i>
+            </div>
+            <div class="widget-content">
+              <div id="alertsContainer">
+                <!-- Alerts will be dynamically inserted here -->
+                <div class="no-alerts-message">No active weather alerts</div>
+              </div>
+            </div>
+          </div>
+
+        
+        </main>
+      </div>
+    </div>
+
+    <!-- Leaflet JS for map functionality -->
+    <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+
+    <script src="js/mapFunctionalities.js"></script>
+    <script src="js/searchFunctionalities.js"></script>
+    <script src="js/weatherInfoToggle.js"></script>
+    <script src="js/chartFunctionalities.js"></script>
+    <script src="js/darkThemeToggle.js"></script>
+    <script src="js/weatherAlert.js"></script>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha3/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- Chart.js is already included -->
+    <!-- Add this before the closing </body> tag -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</body>
+</html>
